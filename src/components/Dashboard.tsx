@@ -22,6 +22,8 @@ export function Dashboard({ selectedEvent }: DashboardProps) {
   useEffect(() => {
     if (selectedEvent) {
       loadStats();
+      const interval = setInterval(loadStats, 5000); // Refresh every 5 seconds
+      return () => clearInterval(interval);
     }
   }, [selectedEvent]);
 
@@ -31,7 +33,7 @@ export function Dashboard({ selectedEvent }: DashboardProps) {
     try {
       const eventGuests = await storage.getGuestsByEventId(selectedEvent.id);
       const presentGuests = eventGuests.filter(g => g.isPresent);
-      const absentGuests = eventGuests.filter(g => !g.isPresent);
+      const absentGuests = eventGuests.length - presentGuests.length;
       
       const attendanceRate = eventGuests.length > 0 
         ? Math.round((presentGuests.length / eventGuests.length) * 100)
@@ -40,7 +42,7 @@ export function Dashboard({ selectedEvent }: DashboardProps) {
       setStats({
         totalGuests: eventGuests.length,
         presentGuests: presentGuests.length,
-        absentGuests: absentGuests.length,
+        absentGuests: absentGuests,
         attendanceRate
       });
 
@@ -70,14 +72,14 @@ export function Dashboard({ selectedEvent }: DashboardProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2">Dashboard - {selectedEvent.name}</h2>
-        <p className="text-gray-600">{selectedEvent.description}</p>
+        <h2 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">Dashboard - {selectedEvent.name}</h2>
+        <p className="text-sm sm:text-base text-gray-600">{selectedEvent.description}</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Guests</CardTitle>

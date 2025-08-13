@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="white"/>
+  <!-- QR Code pattern - simplified version of a valid QR code -->
+  <!-- Position detection patterns -->
+  <rect x="20" y="20" width="30" height="30" fill="black"/>
+  <rect x="25" y="25" width="20" height="20" fill="white"/>
+  <rect x="30" y="30" width="10" height="10" fill="black"/>
+  
+  <rect x="150" y="20" width="30" height="30" fill="black"/>
+  <rect x="155" y="25" width="20" height="20" fill="white"/>
+  <rect x="160" y="30" width="10" height="10" fill="black"/>
+  
+  <rect x="20" y="150" width="30" height="30" fill="black"/>
+  <rect x="25" y="155" width="20" height="20" fill="white"/>
+  <rect x="30" y="160" width="10" height="10" fill="black"/>
+  
+  <!-- Timing patterns -->
+  <rect x="60" y="20" width="10" height="10" fill="black"/>
+  <rect x="80" y="20" width="10" height="10" fill="black"/>
+  <rect x="100" y="20" width="10" height="10" fill="black"/>
+  <rect x="120" y="20" width="10" height="10" fill="black"/>
+  
+  <rect x="20" y="60" width="10" height="10" fill="black"/>
+  <rect x="20" y="80" width="10" height="10" fill="black"/>
+  <rect x="20" y="100" width="10" height="10" fill="black"/>
+  <rect x="20" y="120" width="10" height="10" fill="black"/>
+  
+  <!-- Data pattern (simplified) -->
+  <rect x="60" y="60" width="10" height="10" fill="black"/>
+  <rect x="80" y="60" width="10" height="10" fill="black"/>
+  <rect x="100" y="60" width="10" height="10" fill="black"/>
+  <rect x="60" y="80" width="10" height="10" fill="black"/>
+  <rect x="100" y="80" width="10" height="10" fill="black"/>
+  <rect x="120" y="80" width="10" height="10" fill="black"/>
+  <rect x="140" y="80" width="10" height="10" fill="black"/>
+  <rect x="60" y="100" width="10" height="10" fill="black"/>
+  <rect x="80" y="100" width="10" height="10" fill="black"/>
+  <rect x="120" y="100" width="10" height="10" fill="black"/>
+  <rect x="60" y="120" width="10" height="10" fill="black"/>
+  <rect x="100" y="120" width="10" height="10" fill="black"/>
+  <rect x="140" y="120" width="10" height="10" fill="black"/>
+  <rect x="80" y="140" width="10" height="10" fill="black"/>
+  <rect x="120" y="140" width="10" height="10" fill="black"/>
+  <rect x="140" y="140" width="10" height="10" fill="black"/>
+  
+  <!-- Text label -->
+  <text x="100" y="190" text-anchor="middle" font-family="Arial" font-size="12">TEST123</text>
+</svg>

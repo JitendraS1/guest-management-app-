@@ -87,12 +87,12 @@ export function EventManager({ onEventSelect, selectedEvent }: EventManagerProps
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Events</h2>
+    <div className="space-y-3 sm:space-y-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
+        <h2 className="text-xl sm:text-2xl font-bold">Events</h2>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
-            <Button>Create Event</Button>
+            <Button className="w-full sm:w-auto">Create Event</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test QR Code</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .qr-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 20px 0;
+    }
+    canvas {
+      border: 1px solid #ddd;
+      margin-bottom: 10px;
+    }
+    input, button, select {
+      margin: 5px 0;
+      padding: 8px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <h1>Test QR Code Generator</h1>
+  <p>Use this page to generate test QR codes for your scanner.</p>
+  
+  <div>
+    <h2>1. Simple Invite Code</h2>
+    <div class="qr-container">
+      <canvas id="simpleQR"></canvas>
+      <input type="text" id="inviteCode" value="TEST123" placeholder="Enter invite code">
+      <button onclick="generateSimpleQR()">Generate Simple QR</button>
+    </div>
+  </div>
+
+  <div>
+    <h2>2. JSON QR Code</h2>
+    <div class="qr-container">
+      <canvas id="jsonQR"></canvas>
+      <div>
+        <input type="text" id="guestId" value="guest-123" placeholder="Guest ID">
+        <input type="text" id="eventId" value="event-456" placeholder="Event ID">
+        <input type="text" id="jsonInviteCode" value="INVITE789" placeholder="Invite Code">
+        <button onclick="generateJsonQR()">Generate JSON QR</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Generate a simple QR code with just the invite code
+    function generateSimpleQR() {
+      const inviteCode = document.getElementById('inviteCode').value.trim();
+      if (!inviteCode) {
+        alert('Please enter an invite code');
+        return;
+      }
+      
+      QRCode.toCanvas(document.getElementById('simpleQR'), inviteCode, {
+        width: 200,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      }, function(error) {
+        if (error) console.error(error);
+        console.log('Simple QR code generated!');
+      });
+    }
+
+    // Generate a JSON QR code with guest and event info
+    function generateJsonQR() {
+      const guestId = document.getElementById('guestId').value.trim();
+      const eventId = document.getElementById('eventId').value.trim();
+      const inviteCode = document.getElementById('jsonInviteCode').value.trim();
+      
+      if (!guestId || !eventId || !inviteCode) {
+        alert('Please fill in all fields');
+        return;
+      }
+      
+      const qrData = {
+        guestId: guestId,
+        eventId: eventId,
+        inviteCode: inviteCode
+      };
+      
+      QRCode.toCanvas(document.getElementById('jsonQR'), JSON.stringify(qrData), {
+        width: 200,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      }, function(error) {
+        if (error) console.error(error);
+        console.log('JSON QR code generated!');
+      });
+    }
+
+    // Generate both QR codes on page load
+    window.onload = function() {
+      generateSimpleQR();
+      generateJsonQR();
+    };
+  </script>
+</body>
+</html>
