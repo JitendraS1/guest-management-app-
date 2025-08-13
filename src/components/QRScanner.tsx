@@ -32,6 +32,7 @@ export function QRScanner({ selectedEvent, isScannerActive }: QRScannerProps) {
     success: boolean;
   }>>([]);
   const [manualInput, setManualInput] = useState('');
+  const [scannedData, setScannedData] = useState<string | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -130,6 +131,7 @@ export function QRScanner({ selectedEvent, isScannerActive }: QRScannerProps) {
     if (code) {
       // QR code detected
       console.log('QR code detected:', code.data);
+      setScannedData(code.data);
       processQRData(code.data);
       stopScanning();
     } else {
@@ -217,7 +219,8 @@ export function QRScanner({ selectedEvent, isScannerActive }: QRScannerProps) {
       // Auto-hide result after 3 seconds
       setTimeout(() => {
         setScanResult(null);
-      }, 3000);
+        setScannedData(null);
+      }, 5000);
     } catch (error) {
       setScanResult({
         success: false,
@@ -228,9 +231,16 @@ export function QRScanner({ selectedEvent, isScannerActive }: QRScannerProps) {
 
   const handleManualScan = async () => {
     if (manualInput.trim()) {
+      setScannedData(manualInput.trim());
       await processQRData(manualInput.trim());
       setManualInput('');
     }
+  };
+
+  const restartScanning = () => {
+    setScanResult(null);
+    setScannedData(null);
+    startScanning();
   };
 
   if (!selectedEvent) {
@@ -270,15 +280,10 @@ export function QRScanner({ selectedEvent, isScannerActive }: QRScannerProps) {
               </Alert>
             ) : (
               <div className="flex justify-center">
-                {!isScanning ? (
+                {!isScanning && (
                   <Button onClick={startScanning}>
                     <Camera className="h-4 w-4 mr-2" />
                     Start Camera Scanner
-                  </Button>
-                ) : (
-                  <Button onClick={stopScanning} variant="outline">
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Stop Scanner
                   </Button>
                 )}
               </div>
@@ -343,6 +348,40 @@ export function QRScanner({ selectedEvent, isScannerActive }: QRScannerProps) {
           )}
 
           <Separator />
+
+          {scanResult && (
+            <Alert className={scanResult.success ? "border-green-500 bg-green-50" : "border-red-500 bg-red-50"}>
+              <div className="flex items-center gap-2">
+                {scanResult.success ? (
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-red-600" />
+                )}
+                <AlertDescription className={scanResult.success ? "text-green-800" : "text-red-800"}>
+                  <p className="font-bold">{scanResult.message}</p>
+                  {scanResult.guest && (
+                    <div className="mt-2">
+                      <strong>{scanResult.guest.name}</strong> - {scanResult.guest.email}
+                    </div>
+                  )}
+                  {scannedData && !scanResult.success && (
+                    <div className="mt-2 text-xs bg-red-100 p-2 rounded">
+                      <p className="font-bold">Scanned Data:</p>
+                      <pre className="whitespace-pre-wrap break-all">{scannedData}</pre>
+                    </div>
+                  )}
+                </AlertDescription>
+              </div>
+              {!isScanning && (
+                <div className="mt-4 flex justify-end">
+                  <Button variant="outline" size="sm" onClick={restartScanning}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Scan Again
+                  </Button>
+                </div>
+              )}
+            </Alert>
+          )}
 
           {/* Manual QR Input for testing */}
           <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 space-y-2">
