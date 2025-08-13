@@ -11,6 +11,7 @@ import { parseQRData } from '@/lib/qr-utils';
 import { storage } from '@/lib/storage';
 import { Guest, Event } from '@/types';
 import { toast } from 'sonner';
+import jsQR from 'jsqr';
 
 interface QRScannerProps {
   selectedEvent: Event | null;
@@ -33,7 +34,19 @@ export function QRScanner({ selectedEvent }: QRScannerProps) {
   
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Check browser compatibility
+  const [browserCompatible, setBrowserCompatible] = useState<boolean>(true);
+  
   useEffect(() => {
+    // Check if browser supports required APIs
+    const checkBrowserCompatibility = () => {
+      const hasMediaDevices = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+      const hasCanvas = !!document.createElement('canvas').getContext('2d');
+      setBrowserCompatible(hasMediaDevices && hasCanvas);
+    };
+    
+    checkBrowserCompatibility();
+    
     return () => {
       stopScanning();
     };
@@ -41,6 +54,11 @@ export function QRScanner({ selectedEvent }: QRScannerProps) {
 
   const startScanning = async () => {
     try {
+      // Check if mediaDevices is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera access is not supported in this browser');
+      }
+
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { 
           facingMode: 'environment',
@@ -56,10 +74,58 @@ export function QRScanner({ selectedEvent }: QRScannerProps) {
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         videoRef.current.play();
+        
+        // Start scanning for QR codes
+        requestAnimationFrame(scanVideoFrame);
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
-      toast.error('Failed to access camera. Please check permissions.');
+      
+      // Handle specific permission errors
+      if (error instanceof DOMException && error.name === 'NotAllowedError') {
+        setScanResult({
+          success: false,
+          message: 'Camera permission denied. Please allow camera access in your browser settings and try again.'
+        });
+        toast.error('Camera permission denied. Please check your browser settings.');
+      } else {
+        setScanResult({
+          success: false,
+          message: `Camera error: ${error.message || 'Unknown error'}`
+        });
+        toast.error('Failed to access camera. Please check permissions.');
+      }
+    }
+  };
+  
+  const scanVideoFrame = () => {
+    if (!isScanning || !videoRef.current || !videoRef.current.videoWidth) {
+      return;
+    }
+    
+    const canvas = document.createElement('canvas');
+    const video = videoRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    
+    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: 'dontInvert',
+    });
+    
+    if (code) {
+      // QR code detected
+      console.log('QR code detected:', code.data);
+      processQRData(code.data);
+      stopScanning();
+    } else {
+      // Continue scanning
+      requestAnimationFrame(scanVideoFrame);
     }
   };
 
@@ -184,17 +250,64 @@ export function QRScanner({ selectedEvent }: QRScannerProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex justify-center">
-            {!isScanning ? (
-              <Button onClick={startScanning}>
-                <Camera className="h-4 w-4 mr-2" />
-                Start Camera Scanner
-              </Button>
+          <div className="flex flex-col items-center space-y-4">
+            {!browserCompatible ? (
+              <Alert className="bg-red-50 border-red-200">
+                <AlertTriangle className="h-4 w-4 text-red-500" />
+                <AlertDescription className="text-sm">
+                  <div className="font-medium mb-1">Browser Not Compatible</div>
+                  <p className="text-xs">Your browser doesn't support camera access or canvas required for QR scanning. Please try a modern browser like Chrome, Firefox, or Edge.</p>
+                </AlertDescription>
+              </Alert>
             ) : (
-              <Button onClick={stopScanning} variant="outline">
-                <XCircle className="h-4 w-4 mr-2" />
-                Stop Scanner
-              </Button>
+              <div className="flex justify-center">
+                {!isScanning ? (
+                  <Button onClick={startScanning}>
+                    <Camera className="h-4 w-4 mr-2" />
+                    Start Camera Scanner
+                  </Button>
+                ) : (
+                  <Button onClick={stopScanning} variant="outline">
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Stop Scanner
+                  </Button>
+                )}
+              </div>
+            )}
+            
+            {scanResult && !scanResult.success && scanResult.message && scanResult.message.includes('permission') && (
+              <div className="space-y-4 w-full max-w-md">
+                <Alert className="bg-amber-50 border-amber-200">
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  <AlertDescription className="text-sm">
+                    <div className="font-medium mb-1">Camera Permission Required</div>
+                    <ol className="list-decimal list-inside space-y-1 text-xs">
+                      <li>Click the camera icon in your browser's address bar</li>
+                      <li>Select "Allow" for camera access</li>
+                      <li>Refresh the page and try again</li>
+                    </ol>
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                  <h4 className="text-sm font-medium mb-2 flex items-center">
+                    <Scan className="h-4 w-4 mr-1" />
+                    Manual QR Code Entry
+                  </h4>
+                  <p className="text-xs text-gray-500 mb-3">You can manually enter the QR code data below:</p>
+                  <div className="flex gap-2">
+                    <Input
+                      value={manualInput}
+                      onChange={(e) => setManualInput(e.target.value)}
+                      placeholder="Paste or type QR code data"
+                      className="text-xs"
+                    />
+                    <Button size="sm" onClick={handleManualScan} disabled={!manualInput.trim()}>
+                      Submit
+                    </Button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
 
@@ -206,11 +319,16 @@ export function QRScanner({ selectedEvent }: QRScannerProps) {
                 playsInline
                 muted
               />
-              <div className="absolute inset-4 border-2 border-white rounded-lg pointer-events-none opacity-50">
-                <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-white rounded-tl-lg"></div>
-                <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-white rounded-tr-lg"></div>
-                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-white rounded-bl-lg"></div>
-                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-white rounded-br-lg"></div>
+              <div className="absolute inset-4 border-2 border-blue-500 rounded-lg pointer-events-none opacity-70">
+                <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-blue-500 rounded-tl-lg"></div>
+                <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-blue-500 rounded-tr-lg"></div>
+                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-blue-500 rounded-bl-lg"></div>
+                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-blue-500 rounded-br-lg"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-xs text-white bg-blue-500 bg-opacity-70 px-2 py-1 rounded-md animate-pulse">
+                    Scanning for QR code...
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -218,18 +336,22 @@ export function QRScanner({ selectedEvent }: QRScannerProps) {
           <Separator />
 
           {/* Manual QR Input for testing */}
-          <div className="space-y-2">
-            <Label htmlFor="manual-qr">Manual QR Code Input (for testing)</Label>
+          <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 space-y-2">
+            <h3 className="text-sm font-medium mb-2 flex items-center">
+              <Scan className="h-4 w-4 mr-1" />
+              Manual QR Code Entry
+            </h3>
+            <p className="text-xs text-gray-500 mb-3">If scanning doesn't work, you can manually enter the QR code data:</p>
             <div className="flex gap-2">
               <Input
                 id="manual-qr"
                 value={manualInput}
                 onChange={(e) => setManualInput(e.target.value)}
-                placeholder="Paste QR code data here"
+                placeholder="Paste or type QR code data"
               />
               <Button onClick={handleManualScan} disabled={!manualInput.trim()}>
-                <Scan className="h-4 w-4 mr-2" />
-                Scan
+                <Scan className="h-4 w-4 mr-1" />
+                Submit
               </Button>
             </div>
           </div>
