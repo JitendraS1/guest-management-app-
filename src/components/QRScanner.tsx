@@ -15,9 +15,10 @@ import jsQR from 'jsqr';
 
 interface QRScannerProps {
   selectedEvent: Event | null;
+  isScannerActive: boolean;
 }
 
-export function QRScanner({ selectedEvent }: QRScannerProps) {
+export function QRScanner({ selectedEvent, isScannerActive }: QRScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [scanResult, setScanResult] = useState<{
@@ -51,6 +52,14 @@ export function QRScanner({ selectedEvent }: QRScannerProps) {
       stopScanning();
     };
   }, []);
+
+  useEffect(() => {
+    if (isScannerActive && !isScanning) {
+      startScanning();
+    } else if (!isScannerActive && isScanning) {
+      stopScanning();
+    }
+  }, [isScannerActive]);
 
   const startScanning = async () => {
     try {

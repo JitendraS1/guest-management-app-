@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 
 export default function Index() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [activeTab, setActiveTab] = useState('dashboard');
   const { user, signOut } = useAuthContext();
 
   useEffect(() => {
@@ -73,7 +74,7 @@ export default function Index() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="dashboard" className="space-y-6">
+        <Tabs defaultValue="dashboard" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
@@ -98,10 +99,7 @@ export default function Index() {
           </TabsContent>
 
           <TabsContent value="events">
-            <EventManager 
-              onEventSelect={handleEventSelect}
-              selectedEvent={selectedEvent}
-            />
+            <EventManager selectedEvent={selectedEvent} onEventSelect={handleEventSelect} />
           </TabsContent>
 
           <TabsContent value="guests">
@@ -109,7 +107,7 @@ export default function Index() {
           </TabsContent>
 
           <TabsContent value="scanner">
-            <QRScanner selectedEvent={selectedEvent} />
+            <QRScanner selectedEvent={selectedEvent} isScannerActive={activeTab === 'scanner'} />
           </TabsContent>
         </Tabs>
       </main>
