@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { EventManager } from '@/components/EventManager';
 import { GuestManager } from '@/components/GuestManager';
-import { QRScanner } from '@/components/QRScanner';
+import QRScanner from '@/components/QRScanner';
 import { Dashboard } from '@/components/Dashboard';
 import { Event } from '@/types';
 import { storage } from '@/lib/storage';
@@ -107,7 +107,7 @@ export default function Index() {
           </TabsContent>
 
           <TabsContent value="scanner">
-            <QRScanner selectedEvent={selectedEvent} isScannerActive={activeTab === 'scanner'} />
+            <QRScanner selectedEvent={selectedEvent ? { id: selectedEvent.id, title: selectedEvent.name } : null} />
           </TabsContent>
         </Tabs>
       </main>

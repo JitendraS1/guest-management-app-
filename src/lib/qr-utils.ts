@@ -21,7 +21,26 @@ export const generateQRCode = async (data: QRData): Promise<string> => {
 
 export const parseQRData = (qrString: string): QRData | null => {
   try {
-    const data = JSON.parse(qrString);
+    console.log('Attempting to parse QR string:', qrString);
+    let data;
+    try {
+      data = JSON.parse(qrString);
+    } catch (jsonError) {
+      // If it's not valid JSON, check if it's a simple string that might be an invite code
+      console.log('Not valid JSON, checking if it might be an invite code');
+      if (typeof qrString === 'string' && qrString.trim().length > 0) {
+        // Try to get guest by invite code
+        console.log('Treating as invite code:', qrString.trim());
+        return {
+          guestId: 'unknown', // Will be looked up by invite code
+          eventId: 'unknown', // Will be determined by selected event
+          inviteCode: qrString.trim()
+        };
+      }
+      throw jsonError;
+    }
+    
+    console.log('Parsed data:', data);
     if (data.guestId && data.eventId && data.inviteCode) {
       return data as QRData;
     }
